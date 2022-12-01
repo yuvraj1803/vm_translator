@@ -1,0 +1,3 @@
+/Users/boju/Desktop/nand2tetris/vm-translator/cmake-build-debug/CMakeFiles/vm_translator.dir
+/Users/boju/Desktop/nand2tetris/vm-translator/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/boju/Desktop/nand2tetris/vm-translator/cmake-build-debug/CMakeFiles/rebuild_cache.dir
