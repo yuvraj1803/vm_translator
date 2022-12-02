@@ -11,7 +11,13 @@ CodeWriter::CodeWriter(string &file) {
     base_address["ARG"] = 400;
     base_address["THIS"] = 3000;
     base_address["THAT"] = 3010;
-    fileName = file;
+
+    for(int i=file.size()-1;i>=0;i--){
+        if(file[i] == '/') break;
+        fileName.push_back(file[i]);
+    }
+    reverse(fileName.begin(), fileName.end());
+
 
 }
 
@@ -37,113 +43,101 @@ vector<string> CodeWriter::generateArithmetic(vector<string> &instruction){
     string operation = instruction[0];
 
     if(operation == "add"){
-        /*
-         * @SP
-         * A=M-1
-         * D=M
-         * A=A-1
-         * D=D+M
-         * M=D
-         * D=A
-         * @SP
-         * M=D+1
-         * */
         asmInstruction.push_back("@SP");
-        asmInstruction.push_back("A=M-1");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
         asmInstruction.push_back("D=M");
         asmInstruction.push_back("A=A-1");
-        asmInstruction.push_back("D=D+M");
-        asmInstruction.push_back("M=D");
-        asmInstruction.push_back("D=A");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=D+1");
+        asmInstruction.push_back("M=D+M");
     }
     else if(operation == "sub"){
-        /*
-         * @SP
-         * A=M-1
-         * D=M
-         * A=A-1
-         * D=M-D
-         * M=D
-         * D=A
-         * @SP
-         * M=D+1
-         * */
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("A=A-1");
+        asmInstruction.push_back("M=M-D");
+    }
+    else if(operation == "neg"){
         asmInstruction.push_back("@SP");
         asmInstruction.push_back("A=M-1");
+        asmInstruction.push_back("M=-M");
+    }
+    else if(operation == "eq"){
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
         asmInstruction.push_back("D=M");
         asmInstruction.push_back("A=A-1");
         asmInstruction.push_back("D=M-D");
-        asmInstruction.push_back("M=D");
-        asmInstruction.push_back("D=A");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=D+1");
-    }
-    else if(operation == "neg"){
-        /* (BASICALLY X -> (2^16 - 1 - X) + 1 .. AKA 2'S COMPLIMENT)
-         * @1111111111111111
-         * D=A
-         * @SP
-         * A=M-1
-         * M=D-M
-         * M=M+1
-         * */
-        asmInstruction.push_back("@1111111111111111");
-        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("M=-1");
+        asmInstruction.push_back("@" + fileName + ".jmp." + to_string(jumpCount));
+        asmInstruction.push_back("D;JEQ");
         asmInstruction.push_back("@SP");
         asmInstruction.push_back("A=M-1");
-        asmInstruction.push_back("M=D-M");
-        asmInstruction.push_back("M=M+1");
-    }
-    else if(operation == "eq"){
+        asmInstruction.push_back("M=0");
+        asmInstruction.push_back("(" + fileName + ".jmp." + to_string(jumpCount) + ')');
+
+        jumpCount++;
+
 
     }
-    else if(operation == "gt"){}
-    else if(operation == "lt"){}
-    else if(operation == "and"){
-        /*
-         * @SP
-         * A=M-1
-         * D=M
-         * A=A-1
-         * M=D&M
-         * D=A
-         * @SP
-         * M=D+1
-         * */
+    else if(operation == "gt"){
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("A=A-1");
+        asmInstruction.push_back("D=M-D");
+        asmInstruction.push_back("M=-1");
+        asmInstruction.push_back("@" + fileName + ".jmp." + to_string(jumpCount));
+        asmInstruction.push_back("D;JGT");
         asmInstruction.push_back("@SP");
         asmInstruction.push_back("A=M-1");
+        asmInstruction.push_back("M=0");
+        asmInstruction.push_back("(" + fileName + ".jmp." + to_string(jumpCount) + ')');
+
+        jumpCount++;
+    }
+    else if(operation == "lt"){
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("A=A-1");
+        asmInstruction.push_back("D=M-D");
+        asmInstruction.push_back("M=-1");
+        asmInstruction.push_back("@" + fileName + ".jmp." + to_string(jumpCount));
+        asmInstruction.push_back("D;JLT");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("A=M-1");
+        asmInstruction.push_back("M=0");
+        asmInstruction.push_back("(" + fileName + ".jmp." + to_string(jumpCount) + ')');
+
+        jumpCount++;
+
+    }
+    else if(operation == "and"){
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
         asmInstruction.push_back("D=M");
         asmInstruction.push_back("A=A-1");
         asmInstruction.push_back("M=D&M");
-        asmInstruction.push_back("D=A");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=D+1");
 
     }
     else if(operation == "or"){
-        /*
-        * @SP
-        * A=M-1
-        * D=M
-        * A=A-1
-        * M=D|M
-        * D=A
-        * @SP
-        * M=D+1
-        * */
         asmInstruction.push_back("@SP");
-        asmInstruction.push_back("A=M-1");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
         asmInstruction.push_back("D=M");
         asmInstruction.push_back("A=A-1");
         asmInstruction.push_back("M=D|M");
-        asmInstruction.push_back("D=A");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=D+1");
     }
     else if(operation == "not"){
-
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("A=M-1");
+        asmInstruction.push_back("M=!M");
     }
 
     return asmInstruction;
@@ -156,27 +150,128 @@ vector<string> CodeWriter::generatePop(vector<string> &instruction) {
     if(memSegment == "constant"){
         // error handling coming soon!
     }else if(memSegment == "static"){
-        /*
-         * pop static 5
-         * @SP
-         * A=M-1
-         * D=M
-         * @SP
-         * M=M-1
-         * @file.5
-         * M=D
-         * */
+
+        asmInstruction.push_back("@" + fileName + '.' + instruction[2]);
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("M=D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("M=D");
+
     }else if(memSegment == "local") {
+
+        asmInstruction.push_back("@"+instruction[2]);
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@LCL");
+        asmInstruction.push_back("D=D+M");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("M=D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("M=D");
 
     }else if(memSegment == "argument"){
 
+        asmInstruction.push_back("@"+instruction[2]);
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@ARG");
+        asmInstruction.push_back("D=D+M");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("M=D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("M=D");
+
+
     }else if(memSegment == "pointer"){
+
+        if(instruction[2] == "0"){
+            asmInstruction.push_back("@THIS");
+            asmInstruction.push_back("D=A");
+            asmInstruction.push_back("@addr1");
+            asmInstruction.push_back("M=D");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("M=M-1");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("D=M");
+            asmInstruction.push_back("@addr1");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("M=D");
+        }else{
+            asmInstruction.push_back("@THAT");
+            asmInstruction.push_back("D=A");
+            asmInstruction.push_back("@addr1");
+            asmInstruction.push_back("M=D");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("M=M-1");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("D=M");
+            asmInstruction.push_back("@addr1");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("M=D");
+        }
 
     }else if(memSegment == "temp"){
 
+        asmInstruction.push_back("@5");
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@"+instruction[2]);
+        asmInstruction.push_back("D=D+A");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("M=D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("@addr1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("M=D");
+
     }else if(memSegment == "this"){
 
+        asmInstruction.push_back("@" + instruction[2]);
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@THIS");
+        asmInstruction.push_back("D=D+M");
+        asmInstruction.push_back("@tempvar");
+        asmInstruction.push_back("M=D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("@tempvar");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("M=D");
+
+
     }else if(memSegment == "that"){
+
+        asmInstruction.push_back("@" + instruction[2]);
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@THAT");
+        asmInstruction.push_back("D=D+M");
+        asmInstruction.push_back("@tempvar");
+        asmInstruction.push_back("M=D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M-1");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("D=M");
+        asmInstruction.push_back("@tempvar");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("M=D");
 
     }else{
         // error handling coming soon!
@@ -190,107 +285,53 @@ vector<string> CodeWriter::generatePush(vector<string> &instruction) { // ex. "p
 
     vector<string> asmInstruction;
     if(memSegment == "constant"){
-        /* push constant 4
-         * @4
-         * D=A
-         * @SP
-         * A=M
-         * M=D
-         * @SP
-         * M=M+1
-         * */
-        asmInstruction.push_back("@"+instruction[2]);
-        asmInstruction.push_back("D=A");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("A=M");
-        asmInstruction.push_back("M=D");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=M+1");
+
+            asmInstruction.push_back("@"+instruction[2]);
+            asmInstruction.push_back("D=A");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("M=D");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("M=M+1");
 
     }else if(memSegment == "static"){
-        /* push static 5
-         * @file.5
-         * D=M
-         * @SP
-         * A=M
-         * M=D
-         * @SP
-         * M=M+1
-         * */
-        asmInstruction.push_back("@" + fileName + '.' + instruction[2]);
-        asmInstruction.push_back("D=M");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("A=M");
-        asmInstruction.push_back("M=D");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=M+1");
+
+            asmInstruction.push_back("@" + fileName + '.' + instruction[2]);
+            asmInstruction.push_back("D=M");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("M=D");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("M=M+1");
 
     }else if(memSegment == "local") {
 
-        /*
-         * push local 4
-         * @LCL
-         * D=M
-         * @4
-         * D=D+A
-         * A=D
-         * D=M
-         * @SP
-         * A=M
-         * M=D
-         * @SP
-         * M=M+1
-         * */
-        asmInstruction.push_back("@LCL");
-        asmInstruction.push_back("D=M");
-        asmInstruction.push_back("@" + instruction[2]);
-        asmInstruction.push_back("D=D+A");
-        asmInstruction.push_back("A=D");
-        asmInstruction.push_back("D=M");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("A=M");
-        asmInstruction.push_back("M=D");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=M+1");
+            asmInstruction.push_back("@" + instruction[2]);
+            asmInstruction.push_back("D=A");
+            asmInstruction.push_back("@LCL");
+            asmInstruction.push_back("A=D+M");
+            asmInstruction.push_back("D=M");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("M=D");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("M=M+1");
 
     }else if(memSegment == "argument"){
-        /*
-        * push argument 4
-        * @ARG
-        * D=M
-        * @4
-        * D=D+A
-        * A=D
-        * D=M
-        * @SP
-        * A=M
-        * M=D
-        * @SP
-        * M=M+1
-        * */
-        asmInstruction.push_back("@ARG");
-        asmInstruction.push_back("D=M");
-        asmInstruction.push_back("@" + instruction[2]);
-        asmInstruction.push_back("D=D+A");
-        asmInstruction.push_back("A=D");
-        asmInstruction.push_back("D=M");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("A=M");
-        asmInstruction.push_back("M=D");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=M+1");
+
+            asmInstruction.push_back("@" + instruction[2]);
+            asmInstruction.push_back("D=A");
+            asmInstruction.push_back("@ARG");
+            asmInstruction.push_back("A=D+M");
+            asmInstruction.push_back("D=M");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("A=M");
+            asmInstruction.push_back("M=D");
+            asmInstruction.push_back("@SP");
+            asmInstruction.push_back("M=M+1");
+
     }else if(memSegment == "pointer"){
-        /* 0->THIS 1->THAT
-        *
-        * push pointer 0
-        * @THIS
-        * D=M
-        * @SP
-        * A=M
-        * M=D
-        * @SP
-        * M=M+1
-        * */
+
         if(instruction[2] == "0"){
             asmInstruction.push_back("@THIS");
             asmInstruction.push_back("D=M");
@@ -310,50 +351,24 @@ vector<string> CodeWriter::generatePush(vector<string> &instruction) { // ex. "p
         }
 
     }else if(memSegment == "temp"){
-        /*
-        * push temp 4
-        * @5
-        * D=A
-        * @4
-        * D=D+A
-        * A=D
-        * D=M
-        * @SP
-        * A=M
-        * M=D
-        * @SP
-        * M=M+1
-        * */
-        asmInstruction.push_back("@5");
-        asmInstruction.push_back("D=A");
+
         asmInstruction.push_back("@" + instruction[2]);
-        asmInstruction.push_back("D=D+A");
-        asmInstruction.push_back("A=D");
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@R5");
+        asmInstruction.push_back("A=D+A");
         asmInstruction.push_back("D=M");
         asmInstruction.push_back("@SP");
         asmInstruction.push_back("A=M");
         asmInstruction.push_back("M=D");
         asmInstruction.push_back("@SP");
         asmInstruction.push_back("M=M+1");
+
     }else if(memSegment == "this"){
-        /*
-         * push this 5
-         *
-         * @THIS
-         * D=M
-         * @5
-         * D=D+A
-         * D=M
-         * @SP
-         * A=M
-         * M=D
-         * @SP
-         * M=M+1
-         * */
-        asmInstruction.push_back("@THIS");
-        asmInstruction.push_back("D=M");
+
         asmInstruction.push_back("@" + instruction[2]);
-        asmInstruction.push_back("D=D+A");
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@THIS");
+        asmInstruction.push_back("A=D+M");
         asmInstruction.push_back("D=M");
         asmInstruction.push_back("@SP");
         asmInstruction.push_back("A=M");
@@ -362,24 +377,11 @@ vector<string> CodeWriter::generatePush(vector<string> &instruction) { // ex. "p
         asmInstruction.push_back("M=M+1");
 
     }else if(memSegment == "that"){
-        /*
-         * push that 5
-         *
-         * @THAT
-         * D=M
-         * @5
-         * D=D+A
-         * D=M
-         * @SP
-         * A=M
-         * M=D
-         * @SP
-         * M=M+1
-         * */
-        asmInstruction.push_back("@THAT");
-        asmInstruction.push_back("D=M");
+
         asmInstruction.push_back("@" + instruction[2]);
-        asmInstruction.push_back("D=D+A");
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@THAT");
+        asmInstruction.push_back("A=D+M");
         asmInstruction.push_back("D=M");
         asmInstruction.push_back("@SP");
         asmInstruction.push_back("A=M");

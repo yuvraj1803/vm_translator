@@ -19,6 +19,7 @@ private:
     vector<string> generatePop(vector<string> &instruction);
     unordered_map<string, int> base_address;
     string fileName;
+    int jumpCount = 0;
 public:
     CodeWriter(string &file);
     vector<string> generateAssembly(vector<string> &instruction, int instructionType, int lineNr);

@@ -43,6 +43,10 @@ VMTranslator::VMTranslator(string &file) {
         lineNumber++;
     }
 
+    assembly.push_back("(END)");
+    assembly.push_back("@END");
+    assembly.push_back("0;JMP");
+
 
 }
 

@@ -3,16 +3,20 @@
 
 using namespace std;
 
-int main() {
-    string file = "SimpleAdd/SimpleAdd.vm";
-    VMTranslator VMT(file);
-
-    for(auto i: VMT.vmcode) cout << i << '\n';
-    cout << "-----------------------------------" << '\n';
-
-    for(auto i: VMT.assembly){
-        cout << i << '\n';
+int main(int argc, char * argv[]) {
+    if(argc != 2) {
+        cout << "input format: ./vm_translator <file>";
+        exit(1);
     }
+    string file = argv[1];
+    VMTranslator VMT(file);
+    string outputFile = file.substr(0,file.size() - 2) + "asm";
+    ofstream outStream(outputFile);
+    for(auto assemblyCode : VMT.assembly){
+        outStream << assemblyCode << '\n';
+    }
+
+    outStream.close();
 
     return 0;
 }
