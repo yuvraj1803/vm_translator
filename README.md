@@ -25,6 +25,10 @@ Examples:
 
 ![asm_code](https://user-images.githubusercontent.com/37622719/205269603-e80bf4e9-3f86-4f79-90c6-c226882a9f18.png)
 
+**Version 1**
+1. supports arithmetic operations such as ***add, sub, neg, and, or, gt, lt, eq, not***.
+2. supports memory access operations such as ***push and pop*** working with memory segments such as ***local, argument, static, constant, pointer, this and that***.
+
 To know more about the Hack Architecture and the VM Translator, visit https://www.nand2tetris.org/project07
 
 
