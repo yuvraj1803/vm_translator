@@ -1,6 +1,6 @@
 **VM Translator (Hack Architecture)**
 
-The Hack Virtual Machine Translator converts the VM code to the Hack Assembly code. This piece of software has been written in C++17.
+The Hack Virtual Machine Translator converts the VM code **(similar to Java's Byte Code)** to the Hack Assembly code. This piece of software has been written in C++17.
 This project takes advantage of the C++ Standard Template Library and the I/O Streams.
 
 <img width="821" alt="project_diagram" src="https://user-images.githubusercontent.com/37622719/205267717-b3a06f18-1168-4c21-af23-de865f8b4373.png">
