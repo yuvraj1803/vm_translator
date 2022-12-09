@@ -35,8 +35,19 @@ VMTranslator::VMTranslator(string &file) {
         if(parsed_instruction[0] == "push") instructionType = PUSH;
         else if(parsed_instruction[0] == "pop") instructionType = POP;
         else if(parsed_instruction[0] == "add" || parsed_instruction[0] == "sub" || parsed_instruction[0] == "lt" || parsed_instruction[0] == "gt" || parsed_instruction[0] == "neg" || parsed_instruction[0] == "eq" || parsed_instruction[0] == "and" || parsed_instruction[0] == "or" || parsed_instruction[0] == "not") instructionType = ARITHMETIC;
+        else if(parsed_instruction[0] == "label") instructionType = LABEL;
+        else if(parsed_instruction[0] == "if-goto") instructionType = IF;
+        else if(parsed_instruction[0] == "goto") instructionType = GOTO;
+        else if(parsed_instruction[0] == "function") instructionType = FUNCTION;
+        else if(parsed_instruction[0] == "call") instructionType = CALL;
+        else if(parsed_instruction[0] == "return") instructionType = RETURN;
 
+        string commentedVMCode = "//";
+        for(auto inst: parsed_instruction) commentedVMCode += inst + ' ';
+        assembly.push_back(commentedVMCode);
         for(auto assembly_instruction : CW.generateAssembly(parsed_instruction, instructionType, lineNumber)){
+
+
             assembly.push_back(assembly_instruction);
         }
 

@@ -8,9 +8,9 @@ int main(int argc, char * argv[]) {
         cout << "input format: ./vm_translator <file>";
         exit(1);
     }
-    string file = argv[1];
-    VMTranslator VMT(file);
-    string outputFile = file.substr(0,file.size() - 2) + "asm";
+    string path = argv[1];
+    VMTranslator VMT(path);
+    string outputFile = path.substr(0,path.size() - 2) + "asm";
     ofstream outStream(outputFile);
     for(auto assemblyCode : VMT.assembly){
         outStream << assemblyCode << '\n';

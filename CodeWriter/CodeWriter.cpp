@@ -12,6 +12,8 @@ CodeWriter::CodeWriter(string &file) {
     base_address["THIS"] = 3000;
     base_address["THAT"] = 3010;
 
+    currentFunction = "Sys";
+
     for(int i=file.size()-1;i>=0;i--){
         if(file[i] == '/') break;
         fileName.push_back(file[i]);
@@ -19,6 +21,19 @@ CodeWriter::CodeWriter(string &file) {
     reverse(fileName.begin(), fileName.end());
 
 
+}
+
+vector<string> CodeWriter::generateInit(vector<std::string> &instruction) {
+    vector<string> asmInstruction;
+    asmInstruction.push_back("@256");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=D");
+    vector<string> call_sys_init = {"call", "Sys.init"};
+    for(auto sys_init_instruction : generateCall(call_sys_init)){
+        asmInstruction.push_back(sys_init_instruction);
+    }
+    return asmInstruction;
 }
 
 vector<string> CodeWriter::generateAssembly(vector<string> &instruction, int instructionType, int lineNr = -1) {
@@ -32,6 +47,25 @@ vector<string> CodeWriter::generateAssembly(vector<string> &instruction, int ins
         case POP:
             return generatePop(instruction);
             break;
+        case LABEL:
+            return generateLabel(instruction);
+            break;
+        case IF:
+            return generateIf(instruction);
+            break;
+        case GOTO:
+            return generateGoto(instruction);
+            break;
+        case FUNCTION:
+            return generateFunction(instruction);
+            break;
+        case CALL:
+            return generateCall(instruction);
+            break;
+        case RETURN:
+            return generateReturn();
+            break;
+
 
         default:
             return vector<string>(1,"error generating assembly code for instruction on line " + to_string(lineNr));
@@ -393,6 +427,173 @@ vector<string> CodeWriter::generatePush(vector<string> &instruction) { // ex. "p
     }
 
     return asmInstruction;
+}
 
+vector<string> CodeWriter::generateLabel(vector<string> &instruction){
+    vector<string> asmInstruction;
+    asmInstruction.push_back("(" + currentFunction + "$" + instruction[1] + ")");
+
+    return asmInstruction;
+}
+
+vector<string> CodeWriter::generateIf(vector<string> &instruction){
+    vector<string> asmInstruction;
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@" + currentFunction + "$" + instruction[1]);
+    asmInstruction.push_back("D;JNE");
+
+    return asmInstruction;
+}
+vector<string> CodeWriter::generateGoto(vector<string> &instruction){
+    vector<string> asmInstruction;
+    asmInstruction.push_back("@" + currentFunction + "$" + instruction[1]);
+    asmInstruction.push_back("0;JMP");
+
+    return asmInstruction;
+}
+vector<string> CodeWriter::generateFunction(vector<string> &instruction){
+    int numLocalVars = stoi(instruction[2]);
+    currentFunction = instruction[1];
+
+    vector<string> asmInstruction;
+    asmInstruction.push_back("("+currentFunction+")");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("A=M");
+
+    for(int i=0;i<numLocalVars;i++){
+        asmInstruction.push_back("M=0");
+        asmInstruction.push_back("A=A+1");
+    }
+
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=D");
+
+    return asmInstruction;
+}
+vector<string> CodeWriter::generateCall(vector<string> &instruction){
+    int numArgs = 0;
+
+    if(instruction.size() == 3) numArgs = stoi(instruction[2]);
+
+    vector<string> asmInstruction;
+
+    asmInstruction.push_back("@" + currentFunction + "$ret." + to_string(retCount));
+
+    // WRITING return address TO STACK
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=M+1");
+
+    // WRITING LCL TO STACK
+    asmInstruction.push_back("@LCL");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=M+1");
+
+    // WRITING ARG TO STACK
+    asmInstruction.push_back("@ARG");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=M+1");
+
+    // WRITING THIS TO STACK
+    asmInstruction.push_back("@THIS");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=M+1");
+
+    // WRITING THAT TO STACK
+    asmInstruction.push_back("@THAT");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=M+1");
+
+    asmInstruction.push_back("@" + to_string(numArgs) + '5');
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("D=M-D");
+    asmInstruction.push_back("@ARG");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@LCL");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@" + instruction[1]);
+    asmInstruction.push_back("0;JMP");
+    asmInstruction.push_back("(" + currentFunction + "$ret." + to_string(retCount) + ")");
+
+
+    ++retCount;
+
+    return asmInstruction;
+
+}
+vector<string> CodeWriter::generateReturn(){
+
+    vector<string> asmInstruction;
+
+    asmInstruction.push_back("@LCL");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@R14");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@5");
+    asmInstruction.push_back("D=D-A");
+    asmInstruction.push_back("A=D");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@R15");
+    asmInstruction.push_back("M=D");
+
+    vector<string> pop_arg_0 = {"pop","argument","0"};
+
+    for(auto pop_arg_0_inst : generatePop(pop_arg_0)){
+        asmInstruction.push_back(pop_arg_0_inst);
+    }
+    asmInstruction.push_back("@ARG");
+    asmInstruction.push_back("D=M+1");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@R14");
+    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@THAT");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@R14");
+    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@THIS");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@R14");
+    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@ARG");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@R14");
+    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@LCL");
+    asmInstruction.push_back("M=D");
+    asmInstruction.push_back("@R15");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("0;JMP");
+
+    return asmInstruction;
 
 }
