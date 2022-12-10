@@ -14,7 +14,6 @@ using namespace std;
 
 class CodeWriter {
 private:
-    vector<string> generateInit(vector<string> &instruction);
     vector<string> generateArithmetic(vector<string> &instruction);
     vector<string> generatePush(vector<string> &instruction);
     vector<string> generatePop(vector<string> &instruction);
@@ -26,13 +25,14 @@ private:
     vector<string> generateReturn();
 
     unordered_map<string, int> base_address;
+    unordered_map<string,int> retCount;
     string fileName;
     string currentFunction;
     int jumpCount = 0;
-    int retCount = 0;
 
 public:
     CodeWriter(string &file);
+    vector<string> generateInit();
     vector<string> generateAssembly(vector<string> &instruction, int instructionType, int lineNr);
 };
 

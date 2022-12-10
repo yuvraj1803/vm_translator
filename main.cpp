@@ -9,8 +9,21 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
     string path = argv[1];
+
+    string permissionsSet = "chmod 777 " + path + "/*.vm";
+    system((permissionsSet.c_str()));
+
     VMTranslator VMT(path);
-    string outputFile = path.substr(0,path.size() - 2) + "asm";
+    string outputFile;
+    if(filesystem::is_directory(path)){
+        string directoryName;
+        int posOfLastSlash = 0;
+        for(int i=0;i<path.size();i++) if(path[i] == '/') posOfLastSlash = i;
+        directoryName = path.substr(posOfLastSlash, path.size()-1);
+        outputFile =  path + '/' + directoryName + ".asm";
+    }else{
+        outputFile = path.substr(0,path.size() - 2) + "asm";
+    }
     ofstream outStream(outputFile);
     for(auto assemblyCode : VMT.assembly){
         outStream << assemblyCode << '\n';

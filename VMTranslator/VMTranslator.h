@@ -20,7 +20,6 @@ private:
 public:
     VMTranslator(string &file);
     vector<string> assembly;
-    vector<string> vmcode;
 
 };
 

@@ -23,18 +23,7 @@ CodeWriter::CodeWriter(string &file) {
 
 }
 
-vector<string> CodeWriter::generateInit(vector<std::string> &instruction) {
-    vector<string> asmInstruction;
-    asmInstruction.push_back("@256");
-    asmInstruction.push_back("D=A");
-    asmInstruction.push_back("@SP");
-    asmInstruction.push_back("M=D");
-    vector<string> call_sys_init = {"call", "Sys.init"};
-    for(auto sys_init_instruction : generateCall(call_sys_init)){
-        asmInstruction.push_back(sys_init_instruction);
-    }
-    return asmInstruction;
-}
+
 
 vector<string> CodeWriter::generateAssembly(vector<string> &instruction, int instructionType, int lineNr = -1) {
     switch (instructionType) {
@@ -477,10 +466,10 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     int numArgs = 0;
 
     if(instruction.size() == 3) numArgs = stoi(instruction[2]);
-
+    string function = instruction[1];
     vector<string> asmInstruction;
 
-    asmInstruction.push_back("@" + currentFunction + "$ret." + to_string(retCount));
+    asmInstruction.push_back("@" + currentFunction + "$ret." + to_string(retCount[function]));
 
     // WRITING return address TO STACK
     asmInstruction.push_back("D=A");
@@ -491,7 +480,10 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("M=M+1");
 
     // WRITING LCL TO STACK
-    asmInstruction.push_back("@LCL");
+    asmInstruction.push_back("@R0");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R1");
+    asmInstruction.push_back("A=D+A");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -500,7 +492,10 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("M=M+1");
 
     // WRITING ARG TO STACK
-    asmInstruction.push_back("@ARG");
+    asmInstruction.push_back("@R0");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R2");
+    asmInstruction.push_back("A=D+A");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -509,7 +504,10 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("M=M+1");
 
     // WRITING THIS TO STACK
-    asmInstruction.push_back("@THIS");
+    asmInstruction.push_back("@R0");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R3");
+    asmInstruction.push_back("A=D+A");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -518,7 +516,10 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("M=M+1");
 
     // WRITING THAT TO STACK
-    asmInstruction.push_back("@THAT");
+    asmInstruction.push_back("@R0");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R4");
+    asmInstruction.push_back("A=D+A");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -526,22 +527,21 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("M=M+1");
 
-    asmInstruction.push_back("@" + to_string(numArgs) + '5');
-    asmInstruction.push_back("D=A");
     asmInstruction.push_back("@SP");
-    asmInstruction.push_back("D=M-D");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@5");
+    asmInstruction.push_back("D=D-A");
     asmInstruction.push_back("@ARG");
     asmInstruction.push_back("M=D");
+
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@LCL");
     asmInstruction.push_back("M=D");
+
     asmInstruction.push_back("@" + instruction[1]);
     asmInstruction.push_back("0;JMP");
-    asmInstruction.push_back("(" + currentFunction + "$ret." + to_string(retCount) + ")");
-
-
-    ++retCount;
+    asmInstruction.push_back("(" + currentFunction + "$ret." + to_string(retCount[function]) + ")");
 
     return asmInstruction;
 
@@ -596,4 +596,17 @@ vector<string> CodeWriter::generateReturn(){
 
     return asmInstruction;
 
+}
+vector<string> CodeWriter::generateInit() {
+    vector<string> asmInstruction;
+    asmInstruction.push_back("@256");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=D");
+    vector<string> call_sys_init = {"call", "Sys.init"};
+    asmInstruction.push_back("// call Sys.init 0");
+    for(auto sys_init_instruction : generateCall(call_sys_init)){
+        asmInstruction.push_back(sys_init_instruction);
+    }
+    return asmInstruction;
 }
