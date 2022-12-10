@@ -29,6 +29,9 @@ Examples:
 1. supports arithmetic operations such as ***add, sub, neg, and, or, gt, lt, eq, not***.
 2. supports memory access operations such as ***push and pop*** working with memory segments such as ***local, argument, static, constant, pointer, this and that***.
 
+**Version 2**
+1. supports branching and control flow operations such as **goto, label, if-goto, function, call, and return**
+
 To know more about the Hack Architecture and the VM Translator, visit https://www.nand2tetris.org/project07
 
 
