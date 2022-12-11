@@ -10,12 +10,15 @@ int main(int argc, char * argv[]) {
     }
     string path = argv[1];
 
-    string permissionsSet = "chmod 777 " + path + "/*.vm";
-    system((permissionsSet.c_str()));
+
 
     VMTranslator VMT(path);
     string outputFile;
     if(filesystem::is_directory(path)){
+
+        string permissionsSet = "chmod 777 " + path + "/*.vm";
+        system((permissionsSet.c_str()));
+
         string directoryName;
         int posOfLastSlash = 0;
         for(int i=0;i<path.size();i++) if(path[i] == '/') posOfLastSlash = i;

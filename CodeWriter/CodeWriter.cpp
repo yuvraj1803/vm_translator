@@ -448,17 +448,16 @@ vector<string> CodeWriter::generateFunction(vector<string> &instruction){
 
     vector<string> asmInstruction;
     asmInstruction.push_back("("+currentFunction+")");
-    asmInstruction.push_back("@SP");
-    asmInstruction.push_back("A=M");
 
     for(int i=0;i<numLocalVars;i++){
-        asmInstruction.push_back("M=0");
-        asmInstruction.push_back("A=A+1");
+        asmInstruction.push_back("@0");
+        asmInstruction.push_back("D=A");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("M=D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M+1");
     }
-
-    asmInstruction.push_back("D=A");
-    asmInstruction.push_back("@SP");
-    asmInstruction.push_back("M=D");
 
     return asmInstruction;
 }
@@ -470,8 +469,6 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     vector<string> asmInstruction;
 
     asmInstruction.push_back("@" + currentFunction + "$ret." + to_string(retCount[function]));
-
-    // WRITING return address TO STACK
     asmInstruction.push_back("D=A");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -479,11 +476,7 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("M=M+1");
 
-    // WRITING LCL TO STACK
-    asmInstruction.push_back("@R0");
-    asmInstruction.push_back("D=A");
-    asmInstruction.push_back("@R1");
-    asmInstruction.push_back("A=D+A");
+    asmInstruction.push_back("@LCL");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -491,11 +484,7 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("M=M+1");
 
-    // WRITING ARG TO STACK
-    asmInstruction.push_back("@R0");
-    asmInstruction.push_back("D=A");
-    asmInstruction.push_back("@R2");
-    asmInstruction.push_back("A=D+A");
+    asmInstruction.push_back("@ARG");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -503,11 +492,7 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("M=M+1");
 
-    // WRITING THIS TO STACK
-    asmInstruction.push_back("@R0");
-    asmInstruction.push_back("D=A");
-    asmInstruction.push_back("@R3");
-    asmInstruction.push_back("A=D+A");
+    asmInstruction.push_back("@THIS");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -515,11 +500,7 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("M=M+1");
 
-    // WRITING THAT TO STACK
-    asmInstruction.push_back("@R0");
-    asmInstruction.push_back("D=A");
-    asmInstruction.push_back("@R4");
-    asmInstruction.push_back("A=D+A");
+    asmInstruction.push_back("@THAT");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -529,6 +510,8 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
 
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@" + to_string(numArgs));
+    asmInstruction.push_back("D=D-A");
     asmInstruction.push_back("@5");
     asmInstruction.push_back("D=D-A");
     asmInstruction.push_back("@ARG");
@@ -539,9 +522,9 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("@LCL");
     asmInstruction.push_back("M=D");
 
-    asmInstruction.push_back("@" + instruction[1]);
+    asmInstruction.push_back("@boju");
     asmInstruction.push_back("0;JMP");
-    asmInstruction.push_back("(" + currentFunction + "$ret." + to_string(retCount[function]) + ")");
+    asmInstruction.push_back("(RET_ADDRESS.1)");
 
     return asmInstruction;
 
@@ -552,45 +535,54 @@ vector<string> CodeWriter::generateReturn(){
 
     asmInstruction.push_back("@LCL");
     asmInstruction.push_back("D=M");
-    asmInstruction.push_back("@R14");
+    asmInstruction.push_back("@R13");
     asmInstruction.push_back("M=D");
     asmInstruction.push_back("@5");
-    asmInstruction.push_back("D=D-A");
-    asmInstruction.push_back("A=D");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R13");
+    asmInstruction.push_back("A=M-D");
     asmInstruction.push_back("D=M");
-    asmInstruction.push_back("@R15");
+    asmInstruction.push_back("@R14");
     asmInstruction.push_back("M=D");
-
-    vector<string> pop_arg_0 = {"pop","argument","0"};
-
-    for(auto pop_arg_0_inst : generatePop(pop_arg_0)){
-        asmInstruction.push_back(pop_arg_0_inst);
-    }
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("D=M");
+    asmInstruction.push_back("@ARG");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("M=D");
     asmInstruction.push_back("@ARG");
     asmInstruction.push_back("D=M+1");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("M=D");
-    asmInstruction.push_back("@R14");
-    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("@1");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R13");
+    asmInstruction.push_back("A=M-D");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@THAT");
     asmInstruction.push_back("M=D");
-    asmInstruction.push_back("@R14");
-    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("@2");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R13");
+    asmInstruction.push_back("A=M-D");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@THIS");
     asmInstruction.push_back("M=D");
-    asmInstruction.push_back("@R14");
-    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("@3");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R13");
+    asmInstruction.push_back("A=M-D");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@ARG");
     asmInstruction.push_back("M=D");
-    asmInstruction.push_back("@R14");
-    asmInstruction.push_back("AM=M-1");
+    asmInstruction.push_back("@4");
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@R13");
+    asmInstruction.push_back("A=M-D");
     asmInstruction.push_back("D=M");
     asmInstruction.push_back("@LCL");
     asmInstruction.push_back("M=D");
-    asmInstruction.push_back("@R15");
+    asmInstruction.push_back("@R14");
     asmInstruction.push_back("A=M");
     asmInstruction.push_back("0;JMP");
 

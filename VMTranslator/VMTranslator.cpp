@@ -21,6 +21,7 @@ VMTranslator::VMTranslator(string &path) {
             }
 
         }
+        if(sysFilePresent) files.insert(files.begin(),path + "/Sys.vm");
     }else{
         files.push_back(path);
     }
@@ -30,11 +31,10 @@ VMTranslator::VMTranslator(string &path) {
         exit(1);
     }
 
-    if(!sysFilePresent){
+    if(!sysFilePresent and filesystem::is_directory(path)){
         cout << "Sys.vm not found!" << '\n';
         exit(1);
     }
-    files.insert(files.begin(),path + "/Sys.vm");
 
     if(filesystem::is_directory(path)){
         CodeWriter * initCodeWriter = new CodeWriter(path);
@@ -100,9 +100,9 @@ VMTranslator::VMTranslator(string &path) {
             lineNumber++;
         }
 
-        assembly.push_back("(END)");
-        assembly.push_back("@END");
-        assembly.push_back("0;JMP");
+//        assembly.push_back("(END)");
+//        assembly.push_back("@END");
+//        assembly.push_back("0;JMP");
 
         free(VMP);
         free(CW);
