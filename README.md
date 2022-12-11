@@ -31,6 +31,8 @@ Examples:
 
 **Version 2**
 1. supports branching and control flow operations such as **goto, label, if-goto, function, call, and return**
+2. can process an entire directory of .vm files at once.
+3. fixed potential memory leaks.
 
 To know more about the Hack Architecture and the VM Translator, visit https://www.nand2tetris.org/project07
 
