@@ -101,6 +101,9 @@ VMTranslator::VMTranslator(string &path) {
             string commentedVMCode = "//";
             for (auto inst: parsed_instruction) commentedVMCode += inst + ' ';
             assembly.push_back(commentedVMCode);
+
+
+
             for (auto assembly_instruction: CW->generateAssembly(parsed_instruction, instructionType, lineNumber)) {
 
 

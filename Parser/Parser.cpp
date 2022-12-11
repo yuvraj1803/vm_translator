@@ -11,7 +11,7 @@ Parser::Parser(vector<string> &vmcode, string &file) {
         string temp;
         for(auto c : instruction){
             if(c == ' ') {
-                parsed_instruction.push_back(temp);
+                if(!temp.empty())parsed_instruction.push_back(temp);
                 temp = string();
             }
             else temp += c;

@@ -17,13 +17,7 @@ CodeWriter::CodeWriter() {
 }
 
 void CodeWriter::setFile(string &file){
-    for(int i=file.size()-1;i>=0;i--){
-        if(file[i] == '/') break;
-        fileName.push_back(file[i]);
-    }
-    reverse(fileName.begin(), fileName.end());
-    fileName.pop_back();
-    fileName.pop_back();
+    fileName = filesystem::path(file).stem();
 }
 
 
@@ -70,19 +64,24 @@ vector<string> CodeWriter::generateArithmetic(vector<string> &instruction){
 
     if(operation == "add"){
         asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=M-1");
-        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("AM=M-1");
         asmInstruction.push_back("D=M");
-        asmInstruction.push_back("A=A-1");
-        asmInstruction.push_back("M=D+M");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("AM=M-1");
+        asmInstruction.push_back("M=M+D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M+1");
     }
     else if(operation == "sub"){
         asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=M-1");
-        asmInstruction.push_back("A=M");
+        asmInstruction.push_back("AM=M-1");
         asmInstruction.push_back("D=M");
-        asmInstruction.push_back("A=A-1");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("AM=M-1");
         asmInstruction.push_back("M=M-D");
+        asmInstruction.push_back("@SP");
+        asmInstruction.push_back("M=M+1");
+
     }
     else if(operation == "neg"){
         asmInstruction.push_back("@SP");
@@ -450,27 +449,33 @@ vector<string> CodeWriter::generateFunction(vector<string> &instruction){
     functionStack.push(instruction[1]);
     vector<string> asmInstruction;
     asmInstruction.push_back("("+functionStack.top()+")");
+    asmInstruction.push_back("@" + to_string(numLocalVars));
+    asmInstruction.push_back("D=A");
+    asmInstruction.push_back("@INSERT_LOCALS." + to_string(localAddCount));
+    asmInstruction.push_back("@ZERO_LOCALS." + to_string(localAddCount));
+    asmInstruction.push_back("D;JEQ");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("A=M");
+    asmInstruction.push_back("M=0");
+    asmInstruction.push_back("@SP");
+    asmInstruction.push_back("M=M+1");
+    asmInstruction.push_back("D=D-1");
+    asmInstruction.push_back("@INSERT_LOCALS." + to_string(localAddCount));
+    asmInstruction.push_back("D;JNE");
+    asmInstruction.push_back("(ZERO_LOCALS." + to_string(localAddCount) + ")");
 
-    for(int i=0;i<numLocalVars;i++){
-        asmInstruction.push_back("@0");
-        asmInstruction.push_back("D=A");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("A=M");
-        asmInstruction.push_back("M=D");
-        asmInstruction.push_back("@SP");
-        asmInstruction.push_back("M=M+1");
-    }
-
+    localAddCount++;
     return asmInstruction;
 }
 vector<string> CodeWriter::generateCall(vector<string> &instruction){
     int numArgs = 0;
-
     if(instruction.size() == 3) numArgs = stoi(instruction[2]);
+
+
     string function = instruction[1];
     vector<string> asmInstruction;
 
-    asmInstruction.push_back("@" + functionStack.top() + "$ret." + to_string(retCount[function]));
+    asmInstruction.push_back("@" + functionStack.top() + "$ret." + to_string(retCount));
     asmInstruction.push_back("D=A");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -526,7 +531,9 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
 
     asmInstruction.push_back("@" + function);
     asmInstruction.push_back("0;JMP");
-    asmInstruction.push_back("(" + functionStack.top() + "$ret." + to_string(retCount[function]) + ")");
+    asmInstruction.push_back("(" + functionStack.top() + "$ret." + to_string(retCount) + ")");
+
+    retCount++;
 
     return asmInstruction;
 
@@ -588,7 +595,6 @@ vector<string> CodeWriter::generateReturn(){
     asmInstruction.push_back("A=M");
     asmInstruction.push_back("0;JMP");
 
-    functionStack.pop();
 
     return asmInstruction;
 

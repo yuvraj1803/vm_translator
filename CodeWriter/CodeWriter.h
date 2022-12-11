@@ -10,7 +10,7 @@
 #include <stack>
 #include <vector>
 #include <unordered_map>
-
+#include <filesystem>
 using namespace std;
 
 class CodeWriter {
@@ -25,9 +25,10 @@ private:
     vector<string> generateReturn();
 
     unordered_map<string, int> base_address;
-    unordered_map<string,int> retCount;
     string fileName;
     int jumpCount = 0;
+    int retCount = 0;
+    int localAddCount = 0;
 
 public:
     CodeWriter();
