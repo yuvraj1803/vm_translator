@@ -522,9 +522,9 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     asmInstruction.push_back("@LCL");
     asmInstruction.push_back("M=D");
 
-    asmInstruction.push_back("@boju");
+    asmInstruction.push_back("@" + function);
     asmInstruction.push_back("0;JMP");
-    asmInstruction.push_back("(RET_ADDRESS.1)");
+    asmInstruction.push_back("(" + currentFunction + "$ret." + to_string(retCount[function]) + ")");
 
     return asmInstruction;
 
