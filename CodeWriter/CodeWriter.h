@@ -7,6 +7,7 @@
 
 #include "../Misc/reference.h"
 #include <string>
+#include <stack>
 #include <vector>
 #include <unordered_map>
 
@@ -21,19 +22,20 @@ private:
     vector<string> generateIf(vector<string> &instruction);
     vector<string> generateGoto(vector<string> &instruction);
     vector<string> generateFunction(vector<string> &instruction);
-    vector<string> generateCall(vector<string> &instruction);
     vector<string> generateReturn();
 
     unordered_map<string, int> base_address;
     unordered_map<string,int> retCount;
     string fileName;
-    string currentFunction;
     int jumpCount = 0;
 
 public:
-    CodeWriter(string &file);
+    CodeWriter();
     vector<string> generateInit();
+    vector<string> generateCall(vector<string> &instruction);
     vector<string> generateAssembly(vector<string> &instruction, int instructionType, int lineNr);
+    void setFile(string &file);
+    stack<string> functionStack;
 };
 
 

@@ -21,7 +21,7 @@ VMTranslator::VMTranslator(string &path) {
             }
 
         }
-        if(sysFilePresent) files.insert(files.begin(),path + "/Sys.vm");
+        if(sysFilePresent) files.push_back(path + "/Sys.vm");
     }else{
         files.push_back(path);
     }
@@ -36,17 +36,27 @@ VMTranslator::VMTranslator(string &path) {
         exit(1);
     }
 
+    CodeWriter * CW = new CodeWriter();
+
     if(filesystem::is_directory(path)){
-        CodeWriter * initCodeWriter = new CodeWriter(path);
+        CW->setFile(path);
         assembly.push_back("// init");
-        for(auto initInstruction : initCodeWriter->generateInit()){
+        for(auto initInstruction : CW->generateInit()){
             assembly.push_back(initInstruction);
         }
-        free(initCodeWriter);
+        string sysFile = path + "/Sys.vm";
+        CW->setFile(sysFile);
+        vector<string> call_sys_init = {"call", "Sys.init"};
+        assembly.push_back("// call Sys.init 0");
+        for (auto sys_init_instruction: CW->generateCall(call_sys_init)) {
+            assembly.push_back(sys_init_instruction);
+        }
     }
+
 
     for(auto file : files) {
         vector<string> vmcode;
+
         ifstream fileStream(file);
         if (fileStream.is_open()) {
             string temp;
@@ -68,7 +78,7 @@ VMTranslator::VMTranslator(string &path) {
         }
 
         Parser * VMP = new Parser(vmcode, file);
-        CodeWriter * CW = new CodeWriter(file);
+        CW->setFile(file);
 
         int lineNumber = 0;
         for (auto parsed_instruction: VMP->_vmcode) {
@@ -104,11 +114,13 @@ VMTranslator::VMTranslator(string &path) {
 //        assembly.push_back("@END");
 //        assembly.push_back("0;JMP");
 
+
         free(VMP);
-        free(CW);
 
     }
+    free(CW);
 
 
 }
+
 

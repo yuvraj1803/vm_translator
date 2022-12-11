@@ -5,22 +5,25 @@
 #include "CodeWriter.h"
 
 
-CodeWriter::CodeWriter(string &file) {
+CodeWriter::CodeWriter() {
     base_address["SP"] = 256;
     base_address["LCL"] = 300;
     base_address["ARG"] = 400;
     base_address["THIS"] = 3000;
     base_address["THAT"] = 3010;
 
-    currentFunction = "Sys";
+    functionStack.push("Sys");
 
+}
+
+void CodeWriter::setFile(string &file){
     for(int i=file.size()-1;i>=0;i--){
         if(file[i] == '/') break;
         fileName.push_back(file[i]);
     }
     reverse(fileName.begin(), fileName.end());
-
-
+    fileName.pop_back();
+    fileName.pop_back();
 }
 
 
@@ -420,7 +423,7 @@ vector<string> CodeWriter::generatePush(vector<string> &instruction) { // ex. "p
 
 vector<string> CodeWriter::generateLabel(vector<string> &instruction){
     vector<string> asmInstruction;
-    asmInstruction.push_back("(" + currentFunction + "$" + instruction[1] + ")");
+    asmInstruction.push_back("(" + functionStack.top() + "$" + instruction[1] + ")");
 
     return asmInstruction;
 }
@@ -430,24 +433,23 @@ vector<string> CodeWriter::generateIf(vector<string> &instruction){
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("AM=M-1");
     asmInstruction.push_back("D=M");
-    asmInstruction.push_back("@" + currentFunction + "$" + instruction[1]);
+    asmInstruction.push_back("@" + functionStack.top() + "$" + instruction[1]);
     asmInstruction.push_back("D;JNE");
 
     return asmInstruction;
 }
 vector<string> CodeWriter::generateGoto(vector<string> &instruction){
     vector<string> asmInstruction;
-    asmInstruction.push_back("@" + currentFunction + "$" + instruction[1]);
+    asmInstruction.push_back("@" + functionStack.top() + "$" + instruction[1]);
     asmInstruction.push_back("0;JMP");
 
     return asmInstruction;
 }
 vector<string> CodeWriter::generateFunction(vector<string> &instruction){
     int numLocalVars = stoi(instruction[2]);
-    currentFunction = instruction[1];
-
+    functionStack.push(instruction[1]);
     vector<string> asmInstruction;
-    asmInstruction.push_back("("+currentFunction+")");
+    asmInstruction.push_back("("+functionStack.top()+")");
 
     for(int i=0;i<numLocalVars;i++){
         asmInstruction.push_back("@0");
@@ -468,7 +470,7 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
     string function = instruction[1];
     vector<string> asmInstruction;
 
-    asmInstruction.push_back("@" + currentFunction + "$ret." + to_string(retCount[function]));
+    asmInstruction.push_back("@" + functionStack.top() + "$ret." + to_string(retCount[function]));
     asmInstruction.push_back("D=A");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("A=M");
@@ -524,7 +526,7 @@ vector<string> CodeWriter::generateCall(vector<string> &instruction){
 
     asmInstruction.push_back("@" + function);
     asmInstruction.push_back("0;JMP");
-    asmInstruction.push_back("(" + currentFunction + "$ret." + to_string(retCount[function]) + ")");
+    asmInstruction.push_back("(" + functionStack.top() + "$ret." + to_string(retCount[function]) + ")");
 
     return asmInstruction;
 
@@ -586,6 +588,8 @@ vector<string> CodeWriter::generateReturn(){
     asmInstruction.push_back("A=M");
     asmInstruction.push_back("0;JMP");
 
+    functionStack.pop();
+
     return asmInstruction;
 
 }
@@ -595,10 +599,6 @@ vector<string> CodeWriter::generateInit() {
     asmInstruction.push_back("D=A");
     asmInstruction.push_back("@SP");
     asmInstruction.push_back("M=D");
-    vector<string> call_sys_init = {"call", "Sys.init"};
-    asmInstruction.push_back("// call Sys.init 0");
-    for(auto sys_init_instruction : generateCall(call_sys_init)){
-        asmInstruction.push_back(sys_init_instruction);
-    }
+
     return asmInstruction;
 }
